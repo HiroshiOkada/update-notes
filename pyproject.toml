@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "update-notes"
+version = "0.1.0"
+description = "CLI tool to process Obsidian Markdown files"
+authors = [{name = "Hiroshi", email = "example@example.com"}]
+readme = "README.md"
+requires-python = ">=3.8"
+
+[project.scripts]
+update-notes = "update_notes.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
