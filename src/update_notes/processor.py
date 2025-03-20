@@ -70,10 +70,17 @@ def process_markdown_files(input_directory: Path, output_directory: Path) -> Non
         # Move the processed file to oldfiles directory
         destination = oldfiles_dir / file_path.name
         try:
-            file_path.rename(destination)
+            # Windows workaround: First try to rename, if that fails try copy and delete
+            try:
+                file_path.rename(destination)
+            except OSError:
+                # If rename fails (common on Windows), try copy and delete
+                shutil.copy2(file_path, destination)
+                os.unlink(file_path)
             print(f"Moved {file_path.name} to oldfiles directory")
         except Exception as e:
             print(f"Error moving {file_path.name}: {e}")
+            print("The file will be kept in its original location")
     
     # Copy referenced image files to output directory
     copy_image_files(input_directory, output_directory, all_image_refs)
