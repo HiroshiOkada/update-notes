@@ -2,10 +2,12 @@
 
 A simple command-line tool to process Obsidian Markdown files.
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 ## Installation
 
 ```bash
-pipx install git+https://github.com/YourUsername/update-notes.git
+pipx install git+https://github.com/HiroshiOkada/update-notes.git
 ```
 
 ## Usage
