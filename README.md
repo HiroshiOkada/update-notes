@@ -11,7 +11,7 @@ pipx install git+https://github.com/YourUsername/update-notes.git
 ## Usage
 
 ```bash
-update-notes /path/to/obsidian/vault [-i INPUT_DIR] [-o OUTPUT_DIR]
+update-notes /path/to/obsidian/vault [-i INPUT_DIR] [-o OUTPUT_DIR] [--windows-console]
 ```
 
 ### Required Arguments:
@@ -20,6 +20,7 @@ update-notes /path/to/obsidian/vault [-i INPUT_DIR] [-o OUTPUT_DIR]
 ### Optional Arguments:
 - `-i, --input-dir`: Input directory name within the vault (default: "日々の記録")
 - `-o, --output-dir`: Output directory name within the vault (default: input_dir + "まとめ")
+- `--windows-console`: Enable Windows console compatibility features (better handling of Japanese characters)
 
 ### Notes:
 - The input directory must exist within your vault
