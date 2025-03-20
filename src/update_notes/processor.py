@@ -258,8 +258,27 @@ def write_output_files(heading_contents: Dict[str, List[str]], output_directory:
         # Create the output file path
         output_file_path = output_directory / safe_filename
         
-        # Write the content to the file
-        with open(output_file_path, 'w', encoding='utf-8') as outfile:
-            outfile.write('\n'.join([heading] + [""] + content))
-        
-        print(f"Saved heading '{heading_text}' to {output_file_path.name}")
+        # Check if file already exists and append instead of overwriting
+        if output_file_path.exists():
+            # Read existing content
+            with open(output_file_path, 'r', encoding='utf-8') as infile:
+                existing_content = infile.read().rstrip()
+            
+            # Append the new content
+            with open(output_file_path, 'w', encoding='utf-8') as outfile:
+                # Check if existing content already has the heading
+                heading_line = heading + '\n'
+                if heading_line in existing_content:
+                    # If heading already exists, just append the content without the heading
+                    outfile.write(existing_content + '\n\n' + '\n'.join(content))
+                else:
+                    # If heading doesn't exist, append with the heading
+                    outfile.write(existing_content + '\n\n' + '\n'.join([heading] + [""] + content))
+            
+            print(f"Appended to existing file for heading '{heading_text}' at {output_file_path.name}")
+        else:
+            # Create a new file if it doesn't exist
+            with open(output_file_path, 'w', encoding='utf-8') as outfile:
+                outfile.write('\n'.join([heading] + [""] + content))
+            
+            print(f"Created new file for heading '{heading_text}' at {output_file_path.name}")

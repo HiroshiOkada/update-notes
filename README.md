@@ -37,3 +37,4 @@ update-notes /path/to/obsidian/vault [-i INPUT_DIR] [-o OUTPUT_DIR] [--windows-c
 - Processed files are moved to an "oldfiles" directory within the input directory
 - Referenced image files are copied from the input directory to the output directory
 - Both standard Markdown image syntax `![alt](path)` and Obsidian wiki syntax `![[path]]` are supported
+- If an output file already exists, new content is appended to it rather than overwriting
