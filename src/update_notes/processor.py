@@ -40,21 +40,40 @@ def process_markdown_files(input_directory: Path, output_directory: Path) -> Non
                 # Skip files with invalid dates
                 print(f"Skipping file with invalid date: {file_path.name}")
     
-    # Sort files by date
-    daily_notes.sort(key=lambda x: x[1])
-    
-    print(f"Found {len(daily_notes)} daily note files")
-    
+    # Get today's date
+    today_date = datetime.now().date()
+    today_date_str = today_date.strftime('%Y-%m-%d')
+
+    # Filter out today's file
+    original_count = len(daily_notes)
+    print(f"DEBUG: Today's date is {today_date}") # DEBUG PRINT
+    print("DEBUG: Checking daily notes:") # DEBUG PRINT
+    daily_notes_to_process = []
+    for note in daily_notes:
+        file_date_only = note[1].date()
+        print(f"DEBUG: Comparing {file_date_only} with {today_date}. Equal? {file_date_only == today_date}") # DEBUG PRINT
+        if file_date_only != today_date:
+            daily_notes_to_process.append(note)
+    skipped_count = original_count - len(daily_notes_to_process)
+
+    if skipped_count > 0:
+        print(f"Skipping {skipped_count} file(s) from today ({today_date_str})")
+
+    # Sort files by date (use the filtered list)
+    daily_notes_to_process.sort(key=lambda x: x[1])
+
+    print(f"Found {original_count} daily note files, processing {len(daily_notes_to_process)}")
+
     # Dictionary to accumulate content by heading
     heading_contents: Dict[str, List[str]] = {}
     
     # Set to track all referenced image files
     all_image_refs: Set[str] = set()
     
-    # Process each file in chronological order
-    for file_path, file_date, date_str in daily_notes:
+    # Process each file in chronological order (use the filtered list)
+    for file_path, file_date, date_str in daily_notes_to_process:
         file_sections, image_refs = process_file(file_path, date_str)
-        
+
         # Accumulate sections by heading
         for heading, content in file_sections.items():
             if heading not in heading_contents:

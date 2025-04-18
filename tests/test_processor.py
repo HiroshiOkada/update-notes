@@ -1,7 +1,7 @@
 import pytest
 import re
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, date, timedelta # date と timedelta を追加
 import shutil
 import os
 
@@ -182,3 +182,62 @@ def test_write_output_files_append(setup_output_dir, create_temp_file):
 # TODO: process_markdown_files の統合テストを追加する
 # - ファイルの検索、処理、移動、画像コピー、出力ファイル書き込みの一連の流れを確認
 # - Windows特有の処理（ファイル移動の代替、エンコーディング）も考慮できると尚良い
+# --- process_markdown_files の統合テスト ---
+
+@pytest.fixture
+def setup_integration_test_dirs(tmp_path):
+    """統合テスト用のディレクトリ構造を作成"""
+    vault_dir = tmp_path / "test_vault_integration"
+    input_dir = vault_dir / "日々の記録"
+    output_dir = vault_dir / "まとめ"
+    oldfiles_dir = input_dir / "oldfiles" # processor が作成する
+
+    input_dir.mkdir(parents=True)
+    output_dir.mkdir(parents=True) # cli が作成するが、テストのために事前に作成
+
+    # テスト用ファイルを作成
+    today = date.today()
+    yesterday = today - timedelta(days=1)
+    tomorrow = today + timedelta(days=1) # 未来の日付は処理されるはず
+
+    (input_dir / f"{yesterday.strftime('%Y-%m-%d')}.md").write_text(f"# 昨日\n内容", encoding='utf-8')
+    (input_dir / f"{today.strftime('%Y-%m-%d')}.md").write_text(f"# 今日\n書きかけ", encoding='utf-8')
+    (input_dir / f"{tomorrow.strftime('%Y-%m-%d')}.md").write_text(f"# 未来\n予定", encoding='utf-8')
+    # 不正な日付ファイル (処理されないはず)
+    (input_dir / "invalid-date.md").write_text("不正なファイル", encoding='utf-8')
+    # 日付形式でないファイル (処理されないはず)
+    (input_dir / "not-a-date.md").write_text("日付じゃない", encoding='utf-8')
+
+
+    return input_dir, output_dir, oldfiles_dir, today
+
+def test_process_markdown_files_skips_today(setup_integration_test_dirs, capsys):
+    """process_markdown_filesが今日の日付のファイルをスキップするか"""
+    input_dir, output_dir, oldfiles_dir, today = setup_integration_test_dirs
+    today_str = today.strftime('%Y-%m-%d')
+    yesterday_str = (today - timedelta(days=1)).strftime('%Y-%m-%d')
+    tomorrow_str = (today + timedelta(days=1)).strftime('%Y-%m-%d')
+
+    # 実行
+    process_markdown_files(input_dir, output_dir)
+
+    # 標準出力のキャプチャを確認
+    captured = capsys.readouterr()
+    assert f"Skipping 1 file(s) from today ({today_str})" in captured.out
+    assert f"Found 3 daily note files, processing 2" in captured.out # 今日を除いた2ファイル
+    assert f"Processing {yesterday_str}.md" in captured.out
+    assert f"Processing {tomorrow_str}.md" in captured.out
+    assert f"Processing {today_str}.md" not in captured.out # 今日のファイルは処理されない
+
+    # oldfiles ディレクトリを確認
+    assert not (oldfiles_dir / f"{today_str}.md").exists() # 今日のファイルは移動されない
+    assert (oldfiles_dir / f"{yesterday_str}.md").exists() # 昨日のファイルは移動される
+    assert (oldfiles_dir / f"{tomorrow_str}.md").exists() # 未来のファイルは移動される
+
+    # 出力ディレクトリを確認
+    assert (output_dir / "昨日.md").exists()
+    assert (output_dir / "未来.md").exists()
+    assert not (output_dir / "今日.md").exists() # 今日のファイルは出力されない
+
+    # 元の入力ディレクトリに今日のファイルが残っているか確認
+    assert (input_dir / f"{today_str}.md").exists()
